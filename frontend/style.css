@@ -1,0 +1,255 @@
+/* App grid con auth panel */
+.app-container {
+  display: grid;
+  grid-template-columns: 220px 1fr 250px; /* sidebar | main | rightbar */
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+
+.sidebar, .rightbar, .auth-panel {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+/* ===== GENERAL ===== */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f8fa;
+  color: #14171a;
+  transition: background 0.25s, color 0.25s;
+  margin: 0;
+  padding: 0;
+}
+
+/* Headings */
+h1 {
+  text-align: center;
+  color: #1da1f2;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: inherit;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #e1e8ed;
+  padding-bottom: 5px;
+}
+
+/* Inputs and buttons */
+input, button {
+  font-size: 1rem;
+  padding: 8px 10px;
+  margin: 5px 0;
+  border-radius: 6px;
+  border: 1px solid #ccd6dd;
+  outline: none;
+}
+
+input:focus {
+  border-color: #1da1f2;
+}
+.actions button.liked {
+  color: #e0245e; /* rojo corazón */
+  font-weight: bold;
+}
+
+.actions button.retweeted {
+  color: #17bf63; /* verde retweet */
+  font-weight: bold;
+}
+
+
+button {
+  background-color: #1da1f2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0d95e8;
+}
+
+/* Sidebar */
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.sidebar li:hover {
+  background-color: #e6ecf0;
+}
+
+/* Rightbar */
+.rightbar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.rightbar li {
+  padding: 5px 0;
+}
+
+/* Timeline */
+#timeline {
+  list-style: none;
+  padding: 0;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid #e1e8ed;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+#timeline li {
+  padding: 10px;
+  border-bottom: 1px solid #e6ecf0;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+#timeline li:last-child {
+  border-bottom: none;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 5px;
+}
+
+.actions button {
+  background-color: #e6ecf0;
+  color: #14171a;
+  border: none;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.actions button:hover {
+  background-color: #d8dadf;
+}
+
+/* Scrollbar */
+#timeline::-webkit-scrollbar {
+  width: 6px;
+}
+
+#timeline::-webkit-scrollbar-thumb {
+  background-color: rgba(29, 161, 242, 0.5);
+  border-radius: 3px;
+}
+
+/* ===== DARK MODE ===== */
+body.dark {
+  background: #121212;
+  color: #e5e5e5;
+}
+
+/* Sidebar & Rightbar & Timeline */
+body.dark .sidebar li:hover {
+  background-color: #2a2a2a;
+}
+
+body.dark #timeline,
+body.dark input,
+body.dark #users li {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #f5f5f5;
+}
+
+/* Buttons */
+body.dark button {
+  background-color: #0a84d6;
+  color: white;
+}
+
+body.dark .actions button {
+  background-color: #2a2a2a;
+  color: #f5f5f5;
+}
+
+body.dark .actions button:hover {
+  background-color: #3a3a3a;
+}
+
+/* Scrollbar dark */
+body.dark #timeline::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Dark mode toggle button */
+.theme-btn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 50px;           /* ancho clicable */
+  height: 50px;          /* alto clicable */
+  font-size: 24px;       /* tamaño del emoji */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;    /* opcional, para que sea redondo */
+  background: rgba(0,0,0,0.1);  /* ligera transparencia */
+  cursor: pointer;
+  color: inherit;
+  z-index: 1000;
+  transition: background 0.2s;
+}
+/* Likes y Retweets en Dark Mode */
+body.dark .actions button.liked {
+  color: #e0245e; /* rojo corazón */
+  font-weight: bold;
+}
+
+body.dark .actions button.retweeted {
+  color: #17bf63; /* verde retweet */
+  font-weight: bold;
+}
+
+/* Opcional: hover más claro para visual feedback */
+body.dark .actions button.liked:hover,
+body.dark .actions button.retweeted:hover {
+  background-color: #3a3a3a;
+}
+
+.theme-btn:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .app-container {
+    grid-template-columns: 1fr;
+  }
+  .sidebar, .rightbar {
+    display: none;
+  }
+}

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mini Twitter</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Botón Dark Mode -->
+    <button id="themeToggle" class="theme-btn">🌙</button>
+
+    <div class="app-container">
+      <!-- ===== SIDEBAR IZQUIERDA ===== -->
+      <nav class="sidebar">
+        <ul>
+          <li>🏠 Home</li>
+          <li>🔍 Explore</li>
+          <li>🔔 Notifications</li>
+          <li>✉️ Messages</li>
+          <li>⚙️ Settings</li>
+        </ul>
+      </nav>
+
+      <!-- ===== COLUMNA CENTRAL (Timeline + Posts) ===== -->
+      <main class="main">
+        <h1>Mini Twitter</h1>
+
+        <section class="post-message">
+          <h2>Post Message</h2>
+          <input id="message" placeholder="Message" />
+          <button onclick="postMessage()">Post Message</button>
+        </section>
+
+        <section class="timeline-section">
+          <h2>Timeline</h2>
+          <ul id="timeline"></ul>
+        </section>
+      </main>
+
+      <!-- ===== PANEL DERECHO ===== -->
+      <aside class="rightbar">
+        <h2>Trending</h2>
+        <ul>
+          <li>#A</li>
+          <li>#B</li>
+          <li>#C</li>
+          <li>#Webo</li>
+        </ul>
+      </aside>
+    </div>
+    <script>
+      const API = "http://192.168.59.101/backend";
+      const MAX_MSG_LENGTH = 140;
+      let skip = 0,
+        limit = 20,
+        loading = false;
+      const timeline = document.getElementById("timeline");
+
+      // Usuario logueado
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if (!currentUser) window.location.href = "login.html";
+
+      // --- Helper para crear mensaje ---
+      function createMessageElement(m) {
+        const li = document.createElement("li");
+
+        // Texto del mensaje
+        const textSpan = document.createElement("span");
+        textSpan.textContent = `${m.username}: ${m.content}`;
+        li.appendChild(textSpan);
+
+        // Actions
+        const actionsDiv = document.createElement("div");
+        actionsDiv.className = "actions";
+
+        // --- Like ---
+        const likeBtn = document.createElement("button");
+        const userLiked =
+          m.likes_users?.includes(currentUser.username) || false;
+        likeBtn.textContent = `❤️ ${m.likes || 0}`;
+        if (userLiked) likeBtn.classList.add("liked");
+
+        likeBtn.onclick = async () => {
+          try {
+            const res = await fetch(
+              `${API}/messages/${m.id}/like?username=${currentUser.username}`,
+              { method: "POST" }
+            );
+            if (!res.ok) {
+              const err = await res.json();
+              return alert(err.detail || "Error toggling like");
+            }
+            const data = await res.json();
+            m.likes = data.likes;
+            if (likeBtn.classList.contains("liked")) {
+              likeBtn.classList.remove("liked");
+              const index = m.likes_users.indexOf(currentUser.username);
+              if (index >= 0) m.likes_users.splice(index, 1);
+            } else {
+              likeBtn.classList.add("liked");
+              m.likes_users.push(currentUser.username);
+            }
+            likeBtn.textContent = `❤️ ${m.likes}`;
+          } catch (e) {
+            console.error(e);
+          }
+        };
+        actionsDiv.appendChild(likeBtn);
+
+        // --- Retweet ---
+        const retweetBtn = document.createElement("button");
+        const userRetweeted =
+          m.retweets_users?.includes(currentUser.username) || false;
+        retweetBtn.textContent = `🔁 ${m.retweets || 0}`;
+        if (userRetweeted) retweetBtn.classList.add("retweeted");
+
+        retweetBtn.onclick = async () => {
+          try {
+            const res = await fetch(
+              `${API}/messages/${m.id}/retweet?username=${currentUser.username}`,
+              { method: "POST" }
+            );
+            if (!res.ok) {
+              const err = await res.json();
+              return alert(err.detail || "Error toggling retweet");
+            }
+            const data = await res.json();
+            m.retweets = data.retweets;
+            if (retweetBtn.classList.contains("retweeted")) {
+              retweetBtn.classList.remove("retweeted");
+              const index = m.retweets_users.indexOf(currentUser.username);
+              if (index >= 0) m.retweets_users.splice(index, 1);
+            } else {
+              retweetBtn.classList.add("retweeted");
+              m.retweets_users.push(currentUser.username);
+            }
+            retweetBtn.textContent = `🔁 ${m.retweets}`;
+          } catch (e) {
+            console.error(e);
+          }
+        };
+        actionsDiv.appendChild(retweetBtn);
+
+        li.appendChild(actionsDiv);
+        return li;
+      }
+
+      // --- Cargar mensajes ---
+      async function loadOlderMessages() {
+        if (loading) return;
+        loading = true;
+        try {
+          const res = await fetch(
+            `${API}/messages?skip=${skip}&limit=${limit}`
+          );
+          const messages = await res.json();
+          if (messages.length === 0) return;
+
+          messages.forEach((m) => {
+            const li = createMessageElement(m);
+            timeline.appendChild(li);
+          });
+          skip += messages.length;
+        } catch (e) {
+          console.error(e);
+        } finally {
+          loading = false;
+        }
+      }
+
+      // --- Postear mensaje ---
+      async function postMessage() {
+        const username = currentUser.username;
+        let content = document.getElementById("message").value.trim();
+        if (!username || !content)
+          return alert("Username and message required!");
+        if (content.length > MAX_MSG_LENGTH)
+          content = content.slice(0, MAX_MSG_LENGTH) + "...";
+
+        try {
+          const res = await fetch(`${API}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, content }),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            return alert(err.detail || "Error posting message");
+          }
+          const message = await res.json();
+          message.likes_users = [];
+          message.retweets_users = [];
+          document.getElementById("message").value = "";
+          const li = createMessageElement(message);
+          timeline.prepend(li);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Scroll infinito
+      timeline.addEventListener("scroll", () => {
+        if (
+          timeline.scrollTop + timeline.clientHeight >=
+          timeline.scrollHeight - 5
+        ) {
+          loadOlderMessages();
+        }
+      });
+
+      // Inicial
+      loadOlderMessages();
+      const toggleBtn = document.getElementById("themeToggle");
+
+      // Cambiar tema al hacer click
+      toggleBtn.onclick = () => {
+        document.body.classList.toggle("dark");
+
+        if (document.body.classList.contains("dark")) {
+          localStorage.setItem("theme", "dark");
+          toggleBtn.textContent = "☀️";
+        } else {
+          localStorage.setItem("theme", "light");
+          toggleBtn.textContent = "🌙";
+        }
+      };
+
+      // Aplicar tema guardado al cargar
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+        toggleBtn.textContent = "☀️";
+      } else {
+        document.body.classList.remove("dark");
+        toggleBtn.textContent = "🌙";
+      }
+    </script>
+  </body>
+</html>
